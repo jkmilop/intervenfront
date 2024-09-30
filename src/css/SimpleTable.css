@@ -1,0 +1,114 @@
+/* SimpleTable.css */
+
+/* Basic Table Styling */
+.simple-table {
+  width: 100%;
+  border-collapse: collapse; /* Merges borders for a cleaner look */
+  table-layout: fixed; /* Ensures consistent column widths */
+  font-family: Arial, sans-serif; /* Sets a readable font */
+}
+
+/* Table Caption Styling */
+.simple-table caption {
+  caption-side: top;
+  text-align: left;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+  color: #333;
+}
+
+/* Table Header Styling */
+.simple-table thead tr {
+  background-color: #e4f0f5; /* Light background for headers */
+}
+
+.simple-table th {
+  border: 1px solid #a0a0a0; /* Gray border for headers */
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+}
+
+/* Table Body Styling */
+.simple-table tbody tr:nth-child(odd) {
+  background-color: #ffe6f2; /* Light pink for odd rows */
+}
+
+.simple-table tbody tr:nth-child(even) {
+  background-color: #e4a1e4; /* Light purple for even rows */
+}
+
+.simple-table td {
+  border: 1px solid #a0a0a0; /* Gray border for data cells */
+  padding: 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+/* Table Footer Styling */
+.simple-table tfoot tr {
+  background-color: #e4f0f5; /* Matching header background */
+}
+
+.simple-table tfoot td {
+  border: 1px solid #a0a0a0;
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+}
+
+/* Hover Effect for Rows */
+.simple-table tbody tr:hover {
+  background-color: #d1d1d1; /* Gray background on hover */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .simple-table thead {
+    display: none; /* Hide headers on small screens */
+  }
+
+  .simple-table, 
+  .simple-table tbody, 
+  .simple-table tr, 
+  .simple-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .simple-table tr {
+    margin-bottom: 15px;
+  }
+
+  .simple-table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+
+  .simple-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: 50%;
+    padding-left: 15px;
+    font-weight: bold;
+    text-align: left;
+  }
+}
+
+/* Specific Column Styling */
+/* Example: Right-aligning currency values */
+.simple-table .currency {
+  text-align: right;
+}
+
+/* Button Styling within Table */
+.simple-table .options-cell {
+  display: flex;
+  gap: 8px;
+}
+
+.simple-table .options-cell .MuiIconButton-root {
+  padding: 6px;
+}
