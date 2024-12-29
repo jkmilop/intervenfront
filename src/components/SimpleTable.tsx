@@ -14,17 +14,20 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  TableSortLabel
+  TableSortLabel,
+  Typography,
+  Tooltip,
+  Box
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
-import '../css/SimpleTable.css'; // Import the CSS file
-
+import QuizIcon from '@mui/icons-material/Quiz';
+import DetailsIcon from '@mui/icons-material/Details';
 interface Column {
   key: string;
   header: string;
-  isCurrency?: boolean; // Optional property to indicate currency columns
+  isCurrency?: boolean;
 }
 
 interface Row {
@@ -43,7 +46,8 @@ interface SimpleTableProps {
   onEdit: (editedRow: Row) => void;
   onDelete: (id: number | string) => void;
   customInputs?: CustomInputs;
-  entityName: string; // Used for dynamic titles
+  entityName: string;
+  onRowAction?: (id: number | string) => void;
 }
 
 const SimpleTable: React.FC<SimpleTableProps> = ({
@@ -54,6 +58,7 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
   onDelete,
   customInputs,
   entityName,
+  onRowAction,
 }) => {
   const [open, setOpen] = useState(false);
   const [editingRow, setEditingRow] = useState<Row | null>(null);
@@ -66,19 +71,15 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
       const sorted = [...data].sort((a, b) => {
         const aVal = a[sortConfig.key];
         const bVal = b[sortConfig.key];
-        
-        // Handle numeric and string comparison
+
         if (typeof aVal === 'number' && typeof bVal === 'number') {
           return sortConfig.direction === 'asc' ? aVal - bVal : bVal - aVal;
         }
-
         if (typeof aVal === 'string' && typeof bVal === 'string') {
-          return sortConfig.direction === 'asc' 
-            ? aVal.localeCompare(bVal) 
+          return sortConfig.direction === 'asc'
+            ? aVal.localeCompare(bVal)
             : bVal.localeCompare(aVal);
         }
-
-        // Fallback to 0 if types are different or not sortable
         return 0;
       });
       setSortedData(sorted);
@@ -89,17 +90,10 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
 
   const handleOpen = (row: Row | null = null) => {
     setEditingRow(row);
-    
-    // Make sure formData is initialized with the actual ID values for etapa and tipoActividad
-    setFormData({
-      ...row,
-      etapa: row ? row.id_etapa : '', // Ensure we use the ID, not the display name
-      tipoActividad: row ? row.id_tipo_actividad : '', // Ensure we use the ID, not the display name
-    });
-    
+    setFormData({ ...row });
     setOpen(true);
   };
-  
+
   const handleClose = () => {
     setOpen(false);
     setEditingRow(null);
@@ -128,20 +122,20 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
   };
 
   return (
-    <>
-      <TableContainer component={Paper}>
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+        {entityName} 
+      </Typography>
+      <TableContainer component={Paper} sx={{ mb: 3 }}>
         <Button
           startIcon={<AddIcon />}
           onClick={() => handleOpen()}
-          style={{ margin: '16px' }} // Add some margin for spacing
+          sx={{ m: 2 }}
+          variant="contained"
         >
-          Agregar
+          Agregar {entityName}
         </Button>
-
-        <Table className="simple-table">
-          {/* Optional: Add a caption if needed */}
-          {/* <caption>Table Caption</caption> */}
-
+        <Table>
           <TableHead>
             <TableRow>
               {columns.map((column) => (
@@ -162,33 +156,42 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
             {sortedData.map((row) => (
               <TableRow key={row.id}>
                 {columns.map((column) => (
-                  <TableCell
-                    key={`${row.id}-${column.key}`}
-                    className={column.isCurrency ? 'currency' : ''}
-                    data-label={column.header} // For responsive design
-                  >
+                  <TableCell key={`${row.id}-${column.key}`} sx={{ whiteSpace: 'nowrap' }}>
                     {row[column.key]}
                   </TableCell>
                 ))}
-                <TableCell className="options-cell">
-                  <IconButton onClick={() => handleOpen(row)} aria-label={`Editar ${entityName}`}>
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton onClick={() => onDelete(row.id)} aria-label={`Eliminar ${entityName}`}>
-                    <DeleteIcon />
-                  </IconButton>
+                <TableCell>
+                  <Tooltip title="Editar">
+                    <IconButton onClick={() => handleOpen(row)} aria-label={`Editar ${entityName}`}>
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Eliminar">
+                    <IconButton onClick={() => onDelete(row.id)} aria-label={`Eliminar ${entityName}`}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+
+                  <Tooltip title="Ver Actividad Actual">
+                    <IconButton
+                      onClick={() => onRowAction?.(row.id)} // Safely invoke onRowAction with two arguments
+                    >
+                      <DetailsIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Evaluar Actividad">
+                    <IconButton
+                      onClick={() => onRowAction?.(row.id)} // Safely invoke onRowAction with two arguments
+                    >
+                      <QuizIcon />
+                    </IconButton>
+                  </Tooltip>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
-          {/* Optional: Add a footer if needed */}
-          {/* <TableFooter>
-            <TableRow>
-              <TableCell colSpan={columns.length + 1}>Footer Content</TableCell>
-            </TableRow>
-          </TableFooter> */}
         </Table>
-      </TableContainer>
+      </TableContainer >
 
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>{editingRow ? `Editar ${entityName}` : `Agregar ${entityName}`}</DialogTitle>
@@ -215,10 +218,12 @@ const SimpleTable: React.FC<SimpleTableProps> = ({
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
-          <Button onClick={handleSubmit} color="primary">Guardar</Button>
+          <Button onClick={handleSubmit} variant="contained" color="primary">
+            Guardar
+          </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Box >
   );
 };
 

@@ -14,7 +14,7 @@ interface ActividadData {
   } | null;
   tipo_actividad: {
     id: number;
-    actividad: string;
+    nombre: string;
   } | null;
 }
 
@@ -25,7 +25,7 @@ interface EtapaOption {
 
 interface TipoActividadOption {
   id: number;
-  actividad: string;
+  nombre: string;
 }
 
 const Actividad: React.FC = () => {
@@ -85,7 +85,7 @@ const Actividad: React.FC = () => {
       id: actividad.id,
       nombre: actividad.nombre,
       etapa: actividad.etapa?.nombre || 'N/A',
-      tipoActividad: actividad.tipo_actividad?.actividad || 'N/A',
+      tipoActividad: actividad.tipo_actividad?.nombre || 'N/A',
       id_etapa: actividad.id_etapa, // Pass these IDs for use in formData
       id_tipo_actividad: actividad.id_tipo_actividad,
     }));
@@ -200,7 +200,7 @@ const Actividad: React.FC = () => {
           onChange={(e) => onChange(e.target.value as string)}
         >
           {tiposActividad.map(tipo => (
-            <MenuItem key={tipo.id} value={tipo.id.toString()}>{tipo.actividad}</MenuItem>
+            <MenuItem key={tipo.id} value={tipo.id.toString()}>{tipo.nombre}</MenuItem>
           ))}
         </Select>
       </FormControl>

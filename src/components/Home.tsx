@@ -28,29 +28,40 @@ const Home: React.FC = () => {
     setDrawerOpen(open);
   };
 
+  const menuItems = [
+    { text: 'Actividad', path: '/actividad' },
+    { text: 'Actividades Estructura', path: '/actividades-estructura' },
+    { text: 'Capitulo', path: '/capitulo' },
+    { text: 'Casas Table', path: '/casas-table' },
+    { text: 'Ciudad', path: '/ciudad' },
+    { text: 'Conjunto', path: '/conjunto' },
+    { text: 'Diseño', path: '/diseno' },
+    { text: 'Empresa', path: '/empresa' },
+    { text: 'Estructura', path: '/estructura' },
+    { text: 'Etapa', path: '/etapa' },
+    { text: 'Global Actividades', path: '/global-actividades' },
+    { text: 'Estructura Card', path: '/estructura-card' },
+    { text: 'Materiales Estructura', path: '/materiales-estructura' },
+    { text: 'Persona', path: '/persona' },
+    { text: 'Proyecto', path: '/proyecto' },
+    { text: 'Reporte', path: '/reporte' },
+
+    { text: 'Rol', path: '/rol' },
+    { text: 'Simple Table', path: '/simple-table' },
+    { text: 'Tipo Actividad', path: '/tipo-actividad' },
+    { text: 'Tipo Estructura', path: '/tipo-estructura' },
+    { text: 'Tipo Vivienda', path: '/tipo-vivienda' },
+    { text: 'Titulo', path: '/titulo' },
+    { text: 'Tracker Actividades', path: '/tracker-actividades' },
+    { text: 'Ubicación Estructura', path: '/ubicacion-estructura' },
+    { text: 'Zona', path: '/zona' },
+    { text: 'Zona Estructura', path: '/zona-estructura' },
+  ];
+
   const handleNavigation = (path: string) => {
     navigate(path);
     setDrawerOpen(false);
   };
-
-  const menuItems = [
-    { path: '/actividad', label: 'Actividad' },
-    { path: '/zona', label: 'Zona' },
-    { path: '/ciudad', label: 'Ciudad' },
-    { path: '/conjunto', label: 'Conjunto' },
-    { path: '/empresa', label: 'Empresa' },
-    { path: '/global-actividades', label: 'Global Actividades' },
-    { path: '/material-construccion', label: 'Material Construcción' },
-    { path: '/persona', label: 'Persona' },
-    { path: '/proyecto', label: 'Proyecto' },
-    { path: '/rol', label: 'Rol' },
-    { path: '/tipo-actividad', label: 'Tipo Actividad' },
-    { path: '/tipo-estructura', label: 'Tipo Estructura' },
-    { path: '/tipo-vivienda', label: 'Tipo Vivienda' },
-    { path: '/titulo', label: 'Título' },
-    { path: '/tracker-actividades', label: 'Tracker Actividades' },
-    { path: '/ubicacion-estructura', label: 'Ubicación Estructura' },
-  ];
 
   return (
     <div>
@@ -60,30 +71,29 @@ const Home: React.FC = () => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" style={{ flexGrow: 1 }}>
-            App's Name
+            Construction Management App
           </Typography>
         </Toolbar>
       </AppBar>
       <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer(false)}>
-        <Box role="presentation" onClick={toggleDrawer(false)} onKeyDown={toggleDrawer(false)}>
+        <Box role="presentation" sx={{ width: 250 }}>
           <List>
             {menuItems.map((item) => (
               <ListItem key={item.path} disablePadding>
                 <ListItemButton onClick={() => handleNavigation(item.path)}>
-                  <ListItemText primary={item.label} />
+                  <ListItemText primary={item.text} />
                 </ListItemButton>
               </ListItem>
             ))}
           </List>
         </Box>
       </Drawer>
-      {/* Render Child Components */}
       <Box sx={{ padding: 2 }}>
         <Typography variant="h4" gutterBottom>
-          Welcome to the App
+          Welcome to the Construction Management App
         </Typography>
         <Typography variant="body1">
-          Use the menu to navigate to different sections.
+          Use the menu to navigate to different sections of the application.
         </Typography>
       </Box>
     </div>

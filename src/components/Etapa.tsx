@@ -1,41 +1,42 @@
 
-// TipoActividad.tsx
+// Etapa.tsx
 import React, { useState, useEffect } from 'react';
 import SimpleTable, { Column, Row, CustomInputs } from './SimpleTable';
 import { CircularProgress, Snackbar, Alert } from '@mui/material';
 
-interface TipoActividadData {
+interface EtapaData {
   id: number;
   nombre: string;
+  descripcion: string;
 }
 
-const TipoActividad: React.FC = () => {
-  const [tipoactividadsData, setTipoActividadsData] = useState<TipoActividadData[]>([]);
+const Etapa: React.FC = () => {
+  const [etapasData, setEtapasData] = useState<EtapaData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Fetch TipoActividad Data
+  // Fetch Etapa Data
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('http://localhost:4000/tipo-actividad');
+      const response = await fetch('http://localhost:4000/etapa');
       if (!response.ok) {
-        throw new Error('Failed to fetch tipoactividad data');
+        throw new Error('Failed to fetch etapa data');
       }
       const data = await response.json();
 
       if (Array.isArray(data.records)) {
-        setTipoActividadsData(data.records);
+        setEtapasData(data.records);
       } else if (Array.isArray(data)) {
-        setTipoActividadsData(data);
+        setEtapasData(data);
       } else {
         throw new Error('Unexpected data format');
       }
     } catch (error) {
-      console.error('Error fetching tipoactividad data:', error);
-      setError('Failed to fetch tipoactividad data. Please try again later.');
+      console.error('Error fetching etapa data:', error);
+      setError('Failed to fetch etapa data. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -47,18 +48,19 @@ const TipoActividad: React.FC = () => {
 
   const columns: Column[] = [
     { key: 'id', header: 'Id' },
-    { key: 'nombre', header: 'Actividad' }
+    { key: 'nombre', header: 'Nombre' },
+    { key: 'descripcion', header: 'Descripcion' }
   ];
 
-  const generateTableData = (data: TipoActividadData[] = []): Row[] => {
-    return data.map((tipoactividad) => ({
-      id: tipoactividad.id, nombre: tipoactividad.nombre
+  const generateTableData = (data: EtapaData[] = []): Row[] => {
+    return data.map((etapa) => ({
+      id: etapa.id, nombre: etapa.nombre, descripcion: etapa.descripcion
     }));
   };
 
   const handleAdd = async (newRow: Omit<Row, 'id'>) => {
     try {
-      const response = await fetch('http://localhost:4000/tipoactividad', {
+      const response = await fetch('http://localhost:4000/etapa', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,26 +70,26 @@ const TipoActividad: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Failed to add new tipoactividad: ${errorData.message || 'Internal server error'}`);
+        throw new Error(`Failed to add new etapa: ${errorData.message || 'Internal server error'}`);
       }
 
-      const addedTipoActividad: TipoActividadData = await response.json();
-      setSuccess('TipoActividad added successfully.');
-      setTipoActividadsData([...tipoactividadsData, addedTipoActividad]);
+      const addedEtapa: EtapaData = await response.json();
+      setSuccess('Etapa added successfully.');
+      setEtapasData([...etapasData, addedEtapa]);
     } catch (error) {
-      console.error('Error adding new tipoactividad:', error);
-      setError(`Failed to add new tipoactividad: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error adding new etapa:', error);
+      setError(`Failed to add new etapa: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleEdit = async (editedRow: Row) => {
     try {
-      const tipoactividadId = Number(editedRow.id);
-      if (isNaN(tipoactividadId)) {
+      const etapaId = Number(editedRow.id);
+      if (isNaN(etapaId)) {
         throw new Error('Invalid ID for editing.');
       }
 
-      const response = await fetch(`http://localhost:4000/tipoactividad/${editedRow.id}`, {
+      const response = await fetch(`http://localhost:4000/etapa/${editedRow.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -97,41 +99,41 @@ const TipoActividad: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Failed to edit tipoactividad: ${errorData.message || 'Internal server error'}`);
+        throw new Error(`Failed to edit etapa: ${errorData.message || 'Internal server error'}`);
       }
 
-      const updatedTipoActividad: TipoActividadData = await response.json();
-      setSuccess('TipoActividad edited successfully.');
-      setTipoActividadsData(tipoactividadsData.map(tipoactividad => 
-        tipoactividad.id === updatedTipoActividad.id ? updatedTipoActividad : tipoactividad
+      const updatedEtapa: EtapaData = await response.json();
+      setSuccess('Etapa edited successfully.');
+      setEtapasData(etapasData.map(etapa => 
+        etapa.id === updatedEtapa.id ? updatedEtapa : etapa
       ));
     } catch (error) {
-      console.error('Error editing tipoactividad:', error);
-      setError(`Failed to edit tipoactividad: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error editing etapa:', error);
+      setError(`Failed to edit etapa: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
   const handleDelete = async (id: number | string) => {
     try {
-      const tipoactividadId = Number(id);
-      if (isNaN(tipoactividadId)) {
+      const etapaId = Number(id);
+      if (isNaN(etapaId)) {
         throw new Error('Invalid ID for deletion.');
       }
 
-      const response = await fetch(`http://localhost:4000/tipoactividad/${id}`, {
+      const response = await fetch(`http://localhost:4000/etapa/${id}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(`Failed to delete tipoactividad: ${errorData.message || 'Internal server error'}`);
+        throw new Error(`Failed to delete etapa: ${errorData.message || 'Internal server error'}`);
       }
 
-      setSuccess('TipoActividad deleted successfully.');
-      setTipoActividadsData(tipoactividadsData.filter(tipoactividad => tipoactividad.id !== tipoactividadId));
+      setSuccess('Etapa deleted successfully.');
+      setEtapasData(etapasData.filter(etapa => etapa.id !== etapaId));
     } catch (error) {
-      console.error('Error deleting tipoactividad:', error);
-      setError(`Failed to delete tipoactividad: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error deleting etapa:', error);
+      setError(`Failed to delete etapa: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 
@@ -147,7 +149,7 @@ const TipoActividad: React.FC = () => {
 
   return (
     <div style={{ padding: '1rem' }}>
-      <h2>TipoActividads</h2>
+      <h2>Etapas</h2>
       {error && (
         <Snackbar open={Boolean(error)} autoHideDuration={6000} onClose={() => setError(null)}>
           <Alert onClose={() => setError(null)} severity="error" sx={{ width: '100%' }}>
@@ -162,21 +164,21 @@ const TipoActividad: React.FC = () => {
           </Alert>
         </Snackbar>
       )}
-      {Boolean(tipoactividadsData.length) ? (
+      {Boolean(etapasData.length) ? (
         <SimpleTable
           columns={columns}
-          data={generateTableData(tipoactividadsData)}
+          data={generateTableData(etapasData)}
           onAdd={handleAdd}
           onEdit={handleEdit}
           onDelete={handleDelete}
           customInputs={customInputs}
-          entityName="TipoActividad"
+          entityName="Etapa"
         />
       ) : (
-        <div>No tipoactividads found.</div>
+        <div>No etapas found.</div>
       )}
     </div>
   );
 };
 
-export default TipoActividad;
+export default Etapa;
