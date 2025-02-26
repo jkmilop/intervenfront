@@ -43,20 +43,25 @@ const SimpleCard: React.FC<SimpleCardProps> = ({
   title,
 }) => {
   return (
-    <Card sx={{ maxWidth: 345, m: 2 }}>
+    <Card
+      sx={{
+        maxWidth: 360,
+        m: 2,
+        borderRadius: 3,
+        boxShadow: 3,
+        transition: '0.3s',
+        '&:hover': { boxShadow: 6 },
+      }}
+    >
       {imageUrl && (
-        <CardMedia
-          sx={{ height: 140 }}
-          image={imageUrl}
-          title={title}
-        />
+        <CardMedia sx={{ height: 160 }} image={imageUrl} title={title} />
       )}
       <CardContent>
-        <Typography gutterBottom variant="h5" component="div">
+        <Typography gutterBottom variant="h6" component="div" fontWeight="bold">
           {title}
         </Typography>
         {fields.map((field) => (
-          <Typography key={field.key} variant="body2" color="text.secondary">
+          <Typography key={field.key} variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
             <strong>{field.label}:</strong>{' '}
             {customRender && customRender[field.key]
               ? customRender[field.key](data[field.key])
@@ -64,11 +69,28 @@ const SimpleCard: React.FC<SimpleCardProps> = ({
           </Typography>
         ))}
       </CardContent>
-      <CardActions>
-        <IconButton onClick={() => onEdit(data)} size="small" aria-label="edit">
+      <CardActions
+        sx={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          backgroundColor: 'rgba(0, 0, 0, 0.04)',
+          borderTop: '1px solid rgba(0, 0, 0, 0.1)',
+        }}
+      >
+        <IconButton
+          onClick={() => onEdit(data)}
+          size="small"
+          aria-label="edit"
+          color="primary"
+        >
           <EditIcon />
         </IconButton>
-        <IconButton onClick={() => onDelete(data.id)} size="small" aria-label="delete">
+        <IconButton
+          onClick={() => onDelete(data.id)}
+          size="small"
+          aria-label="delete"
+          color="error"
+        >
           <DeleteIcon />
         </IconButton>
       </CardActions>

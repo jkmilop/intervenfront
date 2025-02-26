@@ -8,7 +8,6 @@ interface ReporteData {
   id_interventor: number;
   id_residente: number;
   id_contratista: number;
-  id_actividades_estructura: number;
   descripcion_reporte: string;
   interventor: {
     nombre: string;
@@ -17,6 +16,9 @@ interface ReporteData {
     nombre: string;
   };
   contratista: {
+    nombre: string;
+  };
+  resultado: {
     nombre: string;
   };
 }
@@ -46,7 +48,7 @@ const Reporte: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const [reportesResponse, personasResponse,resutadosResponse] = await Promise.all([
+      const [reportesResponse, personasResponse, resutadosResponse] = await Promise.all([
         fetch('http://localhost:4000/reporte'),
         fetch('http://localhost:4000/persona'),
         fetch('http://localhost:4000/resultado'),
@@ -87,20 +89,27 @@ const Reporte: React.FC = () => {
 
   const columns: Column[] = [
     { key: 'id', header: 'Id' },
-    { key: 'id_actividades_estructura', header: 'Id_actividades_estructura' },
-    { key: 'descripcion_reporte', header: 'Descripcion_reporte' },
+    { key: 'descripcion_reporte', header: 'Descripcion Reporte' },
     { key: 'interventor', header: 'Interventor' },
     { key: 'residente', header: 'Residente' },
-    { key: 'contratista', header: 'Contratista' }
+    { key: 'contratista', header: 'Contratista' },
+    { key: 'resultado', header: 'Resultado' }
+
   ];
 
   const generateTableData = (data: ReporteData[] = []): Row[] => {
     return data.map((reporte) => ({
-      id: reporte.id, id_interventor: reporte.id_interventor, id_residente: reporte.id_residente, id_contratista: reporte.id_contratista, id_actividades_estructura: reporte.id_actividades_estructura, descripcion_reporte: reporte.descripcion_reporte, interventor: reporte.interventor?.nombre || 'N/A', residente: reporte.residente?.nombre || 'N/A', contratista: reporte.contratista?.nombre || 'N/A'
+      id: reporte.id,
+      descripcion_reporte: reporte.descripcion_reporte,
+      interventor: reporte.interventor?.nombre || 'N/A',
+      residente: reporte.residente?.nombre || 'N/A',
+      contratista: reporte.contratista?.nombre || 'N/A',
+      resultado: reporte.resultado?.nombre || 'N/A'
+
     }));
   };
 
-  const handleAdd = async (newRow: Omit<Row, 'id'>) => {
+  const handleAdd = async (newRow: Omit<Row,'id'>) => {
     try {
       // First POST request to add new 'reporte'
       const response = await fetch('http://localhost:4000/reporte', {
@@ -111,7 +120,7 @@ const Reporte: React.FC = () => {
         body: JSON.stringify({
           nombre: newRow.nombre,
           id_residente: Number(newRow.residente), // Convert to number
-          id_contratista: Number(newRow.contratista), 
+          id_contratista: Number(newRow.contratista),
           id_interventor: Number(newRow.interventor), // Convert to number
 
         }),
@@ -145,7 +154,7 @@ const Reporte: React.FC = () => {
         body: JSON.stringify({
           nombre: editedRow.nombre,
           id_residente: Number(editedRow.residente), // Convert to number
-          id_contratista: Number(editedRow.contratista), 
+          id_contratista: Number(editedRow.contratista),
           id_interventor: Number(editedRow.interventor), // Convert to number
         }),
       });
@@ -246,7 +255,7 @@ const Reporte: React.FC = () => {
     ),
 
   };
-  
+
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>

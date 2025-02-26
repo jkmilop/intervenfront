@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import SimpleTable, { Column, Row, CustomInputs } from './SimpleTable';
 import { CircularProgress, Snackbar, Alert } from '@mui/material';
 
-interface ActividadesestructuraData {
+interface ActividadesEstructuraData {
   id: number;
   id_actividad: number;
   id_estructura: number;
@@ -29,7 +29,7 @@ interface ActividadesestructuraData {
 }
 
 const Actividadesestructura: React.FC = () => {
-  const [actividadesestructurasData, setActividadesestructurasData] = useState<ActividadesestructuraData[]>([]);
+  const [actividadesestructurasData, setActividadesestructurasData] = useState<ActividadesEstructuraData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -73,9 +73,9 @@ const Actividadesestructura: React.FC = () => {
     { key: 'actividad', header: 'Actividad' }
   ];
 
-  const generateTableData = (data: ActividadesestructuraData[] = []): Row[] => {
+  const generateTableData = (data: ActividadesEstructuraData[] = []): Row[] => {
     return data.map((actividadesestructura) => ({
-      id: actividadesestructura.id, id_actividad: actividadesestructura.id_actividad, id_estructura: actividadesestructura.id_estructura, descripcion: actividadesestructura.descripcion, fecha_inicio: actividadesestructura.fecha_inicio, fecha_fin: actividadesestructura.fecha_fin, id_reporte: actividadesestructura.id_reporte, id_estado: actividadesestructura.id_estado, estructura: actividadesestructura.estructura.nombre, actividad: actividadesestructura.actividad.nombre
+      id: actividadesestructura.id, id_actividad: actividadesestructura.id_actividad, id_estructura: actividadesestructura.id_estructura, descripcion: actividadesestructura.descripcion, fecha_inicio: actividadesestructura.fecha_inicio, fecha_fin: actividadesestructura.fecha_fin, id_reporte: actividadesestructura.id_reporte, id_estado: actividadesestructura.id_estado, estructura: actividadesestructura.estructura.nombre, actividad: actividadesestructura.actividad.nombre, estado: actividadesestructura.estado.nombre
     }));
   };
 
@@ -92,7 +92,7 @@ const Actividadesestructura: React.FC = () => {
         throw new Error(`Failed to add new actividadesestructura: ${errorData.message || 'Internal server error'}`);
       }
 
-      const addedActividadesestructura: ActividadesestructuraData = await response.json();
+      const addedActividadesestructura: ActividadesEstructuraData = await response.json();
       setSuccess('Actividadesestructura added successfully.');
       setActividadesestructurasData([...actividadesestructurasData, addedActividadesestructura]);
     } catch (error) {
@@ -114,7 +114,7 @@ const Actividadesestructura: React.FC = () => {
         throw new Error(`Failed to edit actividadesestructura: ${errorData.message || 'Internal server error'}`);
       }
 
-      const updatedActividadesestructura: ActividadesestructuraData = await response.json();
+      const updatedActividadesestructura: ActividadesEstructuraData = await response.json();
       setSuccess('Actividadesestructura edited successfully.');
       setActividadesestructurasData(actividadesestructurasData.map(actividadesestructura => 
         actividadesestructura.id === updatedActividadesestructura.id ? updatedActividadesestructura : actividadesestructura

@@ -6,10 +6,13 @@ import ActividadesEstructura from './components/ActividadesEstructura';
 import Capitulo from './components/Capitulo';
 import Ciudad from './components/Ciudad';
 import Conjunto from './components/Conjunto';
+import ConjuntoCard from './components/ConjuntoCard';
+
 import Diseño from './components/Diseño';
-import Empresa from './components/Empresa';
 import Estructura from './components/Estructura';
 import Etapa from './components/Etapa';
+import ProyectoCard from './components/ProyectoCard';
+
 import EstructuraCard from './components/EstructuraCard';
 import MaterialesEstructura from './components/MaterialesEstructura';
 import Persona from './components/Persona';
@@ -41,6 +44,8 @@ const App: React.FC = () => {
           <Route path="/estructura" element={<Estructura />} />
           <Route path="/etapa" element={<Etapa />} />
           <Route path="/estructura-card" element={<EstructuraCard />} />
+          <Route path="/proyecto-card" element={<ProyectoCard />} />
+          <Route path="/conjunto-card" element={<ConjuntoCard />} />
           <Route path="/materiales-estructura" element={<MaterialesEstructura />} />
           <Route path="/persona" element={<Persona />} />
           <Route path="/proyecto" element={<Proyecto />} />
