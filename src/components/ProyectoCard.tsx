@@ -35,8 +35,7 @@ interface EstructuraData {
   tipo_estructura: {
     nombre: string;
   };
-}
-interface ActividadesEstructuraData {
+}interface ActividadesEstructuraData {
   id: number;
   id_actividad: number;
   id_estructura: number;
@@ -201,7 +200,6 @@ const ProyectoCard: React.FC = () => {
       // No mostramos el error para actividades aquí, ya que no es crítico para la carga inicial
     }
   };
-
   // Fetch de datos para los selects del formulario
   const fetchFormSelectData = async () => {
     try {
@@ -297,198 +295,23 @@ const ProyectoCard: React.FC = () => {
   // Función para actualizar el estado de una actividad a 'Culminado' (id_estado = 3) 
   // si el id_resultado del reporte es igual a 3
   // Función para encontrar el siguiente reporte y actualizarlo
-  const encontrarYActualizarSiguienteReporte = async (actividadActual: ActividadesEstructuraData, resultadoId: number) => {
-    try {
-      // Solo proceder si el resultado es 3
-      if (resultadoId !== 3) return;
-
-      // Encontrar la actividad actual en la lista completa para tener todos sus datos
-      const actividad = actividadesData.find(act => act.id === actividadActual.id);
-      if (!actividad) return;
-
-      // Ordenar actividades por id para encontrar la siguiente
-      const actividadesOrdenadas = actividadesData
-        .filter(act => act.id_estructura === actividad.id_estructura)
-        .sort((a, b) => a.id - b.id);
-
-      // Encontrar el índice de la actividad actual
-      const indiceActual = actividadesOrdenadas.findIndex(act => act.id === actividad.id);
-
-      // Verificar si hay una siguiente actividad
-      if (indiceActual !== -1 && indiceActual < actividadesOrdenadas.length - 1) {
-        const siguienteActividad = actividadesOrdenadas[indiceActual + 1];
-
-        // Si la siguiente actividad tiene reporte, actualizar su id_resultado a 2
-        if (siguienteActividad.id_reporte) {
-          const response = await fetch(`http://localhost:4000/reporte/${siguienteActividad.id_reporte}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id_resultado: 2 }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to update next report status');
-          }
-
-          // Actualizar también el estado de la actividad a "En progreso" (id_estado = 2)
-          await fetch(`http://localhost:4000/actividades-estructura/${siguienteActividad.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id_estado: 2 }),
-          });
-
-          // Actualizar los datos para reflejar el cambio
-          await fetchActividades();
-        }
-      }
-    } catch (error) {
-      console.error('Error updating next report:', error);
-      setError('Error al actualizar el siguiente reporte. Inténtelo de nuevo más tarde.');
-    }
-  };
+  const encontrarYActualizarSiguienteReporte = async (actividadActual: ActividadesEstructuraData, resultadoId: number) => { };
 
   // Función para encontrar y actualizar la siguiente estructura
-  const encontrarYActualizarSiguienteEstructura = async (estructuraActual: EstructuraData) => {
-    try {
-      // Verificar si todas las actividades de la estructura actual tienen resultado 3
-      const actividadesEstructura = actividadesData.filter(
-        actividad => actividad.id_estructura === estructuraActual.id
-      );
-
-      const todasCulminadas = actividadesEstructura.every(
-        actividad => actividad.reporte?.resultado?.id === 3
-      );
-
-      if (!todasCulminadas) return;
-
-      // Encontrar la estructura actual en la lista completa
-      const estructura = estructurasData.find(est => est.id === estructuraActual.id);
-      if (!estructura) return;
-
-      // Ordenar estructuras por id dentro del mismo conjunto
-      const estructurasOrdenadas = estructurasData
-        .filter(est => est.id_conjunto === estructura.id_conjunto)
-        .sort((a, b) => a.id - b.id);
-
-      // Encontrar el índice de la estructura actual
-      const indiceActual = estructurasOrdenadas.findIndex(est => est.id === estructura.id);
-
-      // Verificar si hay una siguiente estructura
-      if (indiceActual !== -1 && indiceActual < estructurasOrdenadas.length - 1) {
-        const siguienteEstructura = estructurasOrdenadas[indiceActual + 1];
-
-        // Actualizar el estado de la siguiente estructura a "En progreso" (id_estado = 2)
-        const response = await fetch(`http://localhost:4000/estructura/${siguienteEstructura.id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id_estado: 2 }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update next structure status');
-        }
-
-        // Actualizar los datos para reflejar el cambio
-        await fetchEstructuras();
-
-        setSuccess('Se ha actualizado la siguiente estructura a "En progreso"');
-      }
-    } catch (error) {
-      console.error('Error updating next structure:', error);
-      setError('Error al actualizar la siguiente estructura. Inténtelo de nuevo más tarde.');
-    }
-  };
+  const encontrarYActualizarSiguienteEstructura = async (estructuraActual: EstructuraData) => { };
 
   // Función modificada para actualizar el estado de una actividad
-  const updateEstadoActividad = async (actividadId: number, reporteResultadoId: number) => {
-    try {
-      if (reporteResultadoId === 3) {
-        // Si el resultado es 3, actualizar el estado de la actividad a 'Culminado' (id_estado = 3)
-        const response = await fetch(`http://localhost:4000/actividades-estructura/${actividadId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id_estado: 3 }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update activity status');
-        }
-
-        // Obtener la actividad actual para pasar a la función que actualiza el siguiente reporte
-        const actividadActual = actividadesData.find(act => act.id === actividadId);
-        if (actividadActual) {
-          // Encontrar y actualizar el siguiente reporte si existe
-          await encontrarYActualizarSiguienteReporte(actividadActual, reporteResultadoId);
-        }
-
-        // Actualizar los datos de actividades para reflejar el cambio
-        await fetchActividades();
-
-        // Mostrar mensaje de éxito
-        setSuccess('Estado de actividad actualizado correctamente a Culminado');
-      }
-    } catch (error) {
-      console.error('Error updating activity status:', error);
-      setError('Error al actualizar el estado de la actividad. Inténtelo de nuevo más tarde.');
-    }
-  };
+  const updateEstadoActividad = async (actividadId: number, reporteResultadoId: number) => { };
 
   // Función modificada para actualizar el estado de una estructura
-  const updateEstadoEstructura = async (estructuraId: number) => {
-    try {
-      // Obtener todas las actividades relacionadas con la estructura
-      const actividadesEstructura = actividadesData.filter(
-        actividad => actividad.id_estructura === estructuraId
-      );
-
-      // Verificar si todas las actividades tienen reporte con resultado = 3
-      const todasCulminadas = actividadesEstructura.every(
-        actividad => actividad.reporte?.resultado?.id === 3
-      );
-
-      if (todasCulminadas) {
-        // Si todas las actividades tienen resultado 3, actualizar el estado de la estructura a 'Culminado' (id_estado = 3)
-        const response = await fetch(`http://localhost:4000/estructura/${estructuraId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ id_estado: 3 }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to update structure status');
-        }
-
-        // Encontrar y actualizar la siguiente estructura si existe
-        await encontrarYActualizarSiguienteEstructura(estructuraId);
-
-        // Actualizar los datos de estructuras para reflejar el cambio
-        await fetchEstructuras();
-
-        // Mostrar mensaje de éxito
-        setSuccess('Estado de estructura actualizado correctamente a Culminado');
-      }
-    } catch (error) {
-      console.error('Error updating structure status:', error);
-      setError('Error al actualizar el estado de la estructura. Inténtelo de nuevo más tarde.');
-    }
-  };
+  const updateEstadoEstructura = async (estructuraId: number) => { };
 
   // Función modificada para manejar el envío del formulario
+  // Modificar la función handleSubmitForm para llamar al endpoint después de enviar el formulario
   const handleSubmitForm = async (data: FormData) => {
     try {
       setLoading(true);
       setError(null);
-
       // Convertimos los IDs de string a número para la API
       const payloadData = {
         descripcion_reporte: data.descripcion_reporte,
@@ -498,9 +321,7 @@ const ProyectoCard: React.FC = () => {
         id_resultado: parseInt(data.resultado),
         id_actividad: selectedActividad?.id
       };
-
       let response;
-
       if (selectedActividad?.id_reporte) {
         // Si ya existe un reporte, actualizarlo (PUT)
         response = await fetch(`http://localhost:4000/reporte/${selectedActividad.id_reporte}`, {
@@ -520,9 +341,27 @@ const ProyectoCard: React.FC = () => {
           body: JSON.stringify(payloadData),
         });
       }
-
       if (!response.ok) {
         throw new Error(`Failed to ${selectedActividad?.id_reporte ? 'update' : 'create'} report`);
+      }
+
+      // Obtener la respuesta para conseguir el ID del reporte
+      const responseData = await response.json();
+      const reporteId = selectedActividad?.id_reporte || responseData.id;
+
+      // Llamar al endpoint handleUpdateActividadEstructura después de crear/actualizar el reporte
+      const updateResponse = await fetch(`http://localhost:4000/estructura/handleUpdateActividadEstructura/${reporteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!updateResponse.ok) {
+        console.warn('No se pudo actualizar la actividad estructura, pero el reporte fue guardado');
+      } else {
+        const updateResult = await updateResponse.json();
+        console.log('Resultado de actualización de actividad estructura:', updateResult);
       }
 
       // Actualizar los datos de actividades para reflejar el cambio
@@ -531,7 +370,6 @@ const ProyectoCard: React.FC = () => {
       // Verificar si debemos actualizar el estado de la actividad
       if (selectedActividad) {
         await updateEstadoActividad(selectedActividad.id, parseInt(data.resultado));
-
         // Si se actualizó la actividad, verificar si debemos actualizar la estructura
         if (selectedActividad.id_estructura) {
           await updateEstadoEstructura(selectedActividad.id_estructura);
@@ -540,10 +378,8 @@ const ProyectoCard: React.FC = () => {
 
       // Mostrar mensaje de éxito
       setSuccess(`Reporte ${selectedActividad?.id_reporte ? 'actualizado' : 'creado'} correctamente`);
-
       // Cerrar el formulario
       setReporteFormOpen(false);
-
     } catch (error) {
       console.error('Error submitting report:', error);
       setError(`Error al ${selectedActividad?.id_reporte ? 'actualizar' : 'crear'} el reporte. Inténtelo de nuevo más tarde.`);
@@ -551,8 +387,7 @@ const ProyectoCard: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };  // Funciones para cerrar diálogos
-  const handleCloseConjuntosDialog = () => {
+  }; const handleCloseConjuntosDialog = () => {
     setConjuntosDialogOpen(false);
   };
   const handleCloseEstructurasDialog = () => {
@@ -675,7 +510,7 @@ const ProyectoCard: React.FC = () => {
       </div>
     );
   }
-  return (
+  return (  
     <div style={{ padding: '1rem' }}>
       <h2>Proyectos</h2>
       {error && (
