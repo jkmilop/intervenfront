@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Grid, CircularProgress, Snackbar, Alert, Dialog, DialogTitle, DialogContent, DialogActions, List, ListItem, ListItemText, Button, Chip, Typography, Box, TextField, FormControl, InputLabel, Select, MenuItem, SelectChangeEvent } from '@mui/material';
+import { Grid, CircularProgress, Snackbar, Alert, Dialog, DialogTitle, DialogContent, List, ListItem, ListItemText, Button, Chip, Typography, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import SimpleCard from './SimpleCard';
 import Form, { CustomInputs } from './Form';
 interface ProyectoData {
@@ -26,6 +26,10 @@ interface ConjuntoData {
   tipo_vivienda: {
     nombre: string;
   };
+  estado: {
+    nombre: string;
+  };
+
 }
 interface EstructuraData {
   id: number;
@@ -35,6 +39,10 @@ interface EstructuraData {
   tipo_estructura: {
     nombre: string;
   };
+  estado: {
+    nombre: string;
+  };
+
 }interface ActividadesEstructuraData {
   id: number;
   id_actividad: number;
@@ -182,6 +190,7 @@ const ProyectoCard: React.FC = () => {
       }
       const data = await response.json();
       setEstructurasData(Array.isArray(data) ? data : []);
+      
     } catch (error) {
       console.error('Error fetching estructura data:', error);
       // No mostramos el error para estructuras aquí, ya que no es crítico para la carga inicial
@@ -190,10 +199,13 @@ const ProyectoCard: React.FC = () => {
   const fetchActividades = async () => {
     try {
       const response = await fetch('http://localhost:4000/actividades-estructura');
+      console.log(response, 'response' );
+
       if (!response.ok) {
         throw new Error('Failed to fetch actividades data');
       }
       const data = await response.json();
+      console.log(data, 'data');
       setActividadesData(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching actividades data:', error);
@@ -248,70 +260,200 @@ const ProyectoCard: React.FC = () => {
     setConjuntosDialogOpen(true);
   };
   // Función para mostrar las estructuras relacionadas con un conjunto
+
+  // Función para actualizar el porcentaje de actividades completadas de una estructura
+  const updateEstadoEstructura = async (estructuraId: number) => {
+    try {
+      const response = await fetch(`http://localhost:4000/estructura/porcentaje/${estructuraId}`);
+
+      if (!response.ok) {
+        throw new Error(`Error fetching percentage for structure ${estructuraId}`);
+      }
+
+      const data = await response.json();
+      const porcentaje = data.porcentaje.porcentaje_actividades_completadas || 0;
+
+      // Actualizar el porcentaje para la estructura específica
+      setPorcentajesCompletados(prev => {
+        const index = estructurasRelacionadas.findIndex(est => est.id === estructuraId);
+        if (index === -1) return prev;
+
+        const newPorcentajes = [...prev];
+        newPorcentajes[index] = porcentaje;
+        return newPorcentajes;
+      });
+
+      return porcentaje;
+    } catch (error) {
+      console.error('Error updating structure state:', error);
+      throw error;
+    }
+  };
+
+  // Modificación de la función handleShowEstructuras para obtener los datos actualizados
   const handleShowEstructuras = async (conjunto: ConjuntoData) => {
-    const estructurasRelacionadas = estructurasData.filter(
-      estructura => estructura.id_conjunto === conjunto.id
-    );
-    setSelectedConjunto(conjunto);
-    setEstructurasRelacionadas(estructurasRelacionadas);
+    try {
+      setLoading(true);
 
-    // Obtener los porcentajes de actividades completadas para cada estructura
-    const ids = estructurasRelacionadas.map(estructura => estructura.id);
-    const porcentajesResponses = await Promise.all(
-      ids.map(id => fetch(`http://localhost:4000/estructura/porcentaje/${id}`).then(response => response.json()))
-    );
+      // Obtener las estructuras relacionadas del estado actual
+      const estructurasRelacionadas = estructurasData.filter(
+        estructura => estructura.id_conjunto === conjunto.id
+      );
+      console.log(estructurasRelacionadas, estructurasData);
+      setSelectedConjunto(conjunto);
+      setEstructurasRelacionadas(estructurasRelacionadas);
 
-    // Procesar los porcentajesResponses para obtener los porcentajes de actividades completadas
-    const porcentajesCompletados = porcentajesResponses.map(
-      response => response.porcentaje.porcentaje_actividades_completadas
-    );
+      // Obtener los porcentajes actualizados para cada estructura
+      const ids = estructurasRelacionadas.map(estructura => estructura.id);
 
-    setPorcentajesCompletados(porcentajesCompletados);
-    setEstructurasDialogOpen(true);
-  };  // Función para mostrar las actividades relacionadas con una estructura
-  const handleShowActividadesEstructura = (estructura: EstructuraData) => {
-    const actividadesRelacionadas = actividadesData.filter(
-      actividad => actividad.id_estructura === estructura.id
-    );
-    setSelectedEstructura(estructura);
-    setActividadesRelacionadas(actividadesRelacionadas);
-    setActividadesDialogOpen(true);
+      // Obtener los porcentajes actualizados desde el servidor
+      const porcentajesResponses = await Promise.all(
+        ids.map(id => fetch(`http://localhost:4000/estructura/porcentaje/${id}`).then(response => {
+          if (!response.ok) {
+            throw new Error(`Error fetching percentage for structure ${id}`);
+          }
+          return response.json();
+        }))
+      );
+
+      // Procesar las respuestas para obtener los porcentajes actualizados
+      const porcentajesActualizados = porcentajesResponses.map(
+        response => response.porcentaje.porcentaje_actividades_completadas || 0
+      );
+
+      // Actualizar el estado con los porcentajes actualizados
+      setPorcentajesCompletados(porcentajesActualizados);
+      setEstructurasDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching structure percentages:', error);
+      setError('Error al obtener los porcentajes de las estructuras.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Modificación de la función handleShowActividadesEstructura para obtener datos actualizados
+  const handleShowActividadesEstructura = async (estructura: EstructuraData) => {
+    try {
+      setLoading(true);
+
+      // Obtener actividades actualizadas desde el servidor
+      const response = await fetch(`http://localhost:4000/actividades-estructura/${estructura.id}`);
+
+      if (!response.ok) {
+        throw new Error(`Error fetching activities for structure ${estructura.id}`);
+      }
+
+      const actividadesActualizadas = await response.json();
+      console.log(actividadesActualizadas);
+
+      // Si no hay un endpoint específico, filtrar de los datos locales actualizados
+      const actividadesRelacionadas = Array.isArray(actividadesActualizadas)
+        ? actividadesActualizadas
+        : actividadesData.filter(actividad => actividad.id_estructura === estructura.id);
+
+      setSelectedEstructura(estructura);
+      setActividadesRelacionadas(actividadesRelacionadas);
+      setActividadesDialogOpen(true);
+    } catch (error) {
+      console.error('Error fetching structure activities:', error);
+
+      // En caso de error, usar los datos locales como fallback
+      const actividadesRelacionadas = actividadesData.filter(
+        actividad => actividad.id_estructura === estructura.id
+      );
+
+      setSelectedEstructura(estructura);
+      setActividadesRelacionadas(actividadesRelacionadas);
+      setActividadesDialogOpen(true);
+    } finally {
+      setLoading(false);
+    }
+  };  // Función para mostrar el formulario de reporte de actividad
   // Función para mostrar el formulario de reporte de actividad
-  const handleShowReporteActividades = (actividad: ActividadesEstructuraData) => {
-    setSelectedActividad(actividad);
-    // Inicializar el formulario con datos existentes si los hay
-    setFormData({
-      descripcion_reporte: actividad.reporte?.descripcion || '',
-      interventor: actividad.reporte?.interventor?.nombre || '',
-      residente: actividad.reporte?.residente?.nombre || '',
-      contratista: actividad.reporte?.contratista?.nombre || '',
-      resultado: actividad.reporte?.resultado?.nombre || ''
-    });
+  const handleShowReporteActividades = async (actividad: ActividadesEstructuraData) => {
+    try {
+      setLoading(true);
+      setSelectedActividad(actividad);
 
-    setReporteFormOpen(true);
-  };
+      let interventorId = '';
+      let residenteId = '';
+      let contratistaId = '';
+      let resultadoId = '';
+      let descripcionReporte = '';
 
-  // Función para actualizar el estado de una actividad a 'Culminado' (id_estado = 3) 
-  // si el id_resultado del reporte es igual a 3
-  // Función para encontrar el siguiente reporte y actualizarlo
-  const encontrarYActualizarSiguienteReporte = async (actividadActual: ActividadesEstructuraData, resultadoId: number) => { };
+      // Obtener los datos del reporte desde el endpoint si la actividad tiene un id_reporte
+      if (actividad.id_reporte) {
+        const response = await fetch(`http://localhost:4000/reporte/${actividad.id_reporte}`);
 
-  // Función para encontrar y actualizar la siguiente estructura
-  const encontrarYActualizarSiguienteEstructura = async (estructuraActual: EstructuraData) => { };
+        if (!response.ok) {
+          throw new Error(`Error al obtener el reporte con ID ${actividad.id_reporte}`);
+        }
 
-  // Función modificada para actualizar el estado de una actividad
-  const updateEstadoActividad = async (actividadId: number, reporteResultadoId: number) => { };
+        const reporte = await response.json();
+        console.log(reporte);
 
-  // Función modificada para actualizar el estado de una estructura
-  const updateEstadoEstructura = async (estructuraId: number) => { };
+        // Buscar los IDs correspondientes en las listas de opciones
+        if (reporte) {
+          if (reporte.descripcion_reporte) {
+            descripcionReporte = reporte.descripcion_reporte.toString();
+          }
 
-  // Función modificada para manejar el envío del formulario
+          // Buscar interventor por ID
+          if (reporte.id_interventor) {
+            interventorId = reporte.id_interventor.toString();
+          }
+
+          // Buscar residente por ID
+          if (reporte.id_residente) {
+            residenteId = reporte.id_residente.toString();
+          }
+
+          // Buscar contratista por ID
+          if (reporte.id_contratista) {
+            contratistaId = reporte.id_contratista.toString();
+          }
+
+          // Para resultado, usar el ID directamente
+          if (reporte.id_resultado) {
+            resultadoId = reporte.id_resultado.toString();
+          }
+        }
+      }
+
+      // Inicializar el formulario con datos existentes si los hay
+      setFormData({
+        descripcion_reporte: descripcionReporte,
+        interventor: interventorId,
+        residente: residenteId,
+        contratista: contratistaId,
+        resultado: resultadoId
+      });
+
+      setReporteFormOpen(true);
+    } catch (error) {
+      console.error('Error al obtener datos del reporte:', error);
+      setError('Error al cargar los datos del reporte. Por favor, inténtelo de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };  // Función modificada para manejar el envío del formulario
   // Modificar la función handleSubmitForm para llamar al endpoint después de enviar el formulario
   const handleSubmitForm = async (data: FormData) => {
+    console.log("handlesubitForm")
     try {
       setLoading(true);
       setError(null);
+
+      // Validar datos antes de enviar
+      if (!data.interventor || !data.residente || !data.contratista || !data.resultado) {
+        throw new Error('Todos los campos son obligatorios');
+      }
+
+      if (!selectedActividad) {
+        throw new Error('No se ha seleccionado una actividad');
+      }
+
       // Convertimos los IDs de string a número para la API
       const payloadData = {
         descripcion_reporte: data.descripcion_reporte,
@@ -319,75 +461,103 @@ const ProyectoCard: React.FC = () => {
         id_residente: parseInt(data.residente),
         id_contratista: parseInt(data.contratista),
         id_resultado: parseInt(data.resultado),
-        id_actividad: selectedActividad?.id
+        id_actividad: selectedActividad.id
       };
-      let response;
-      if (selectedActividad?.id_reporte) {
-        // Si ya existe un reporte, actualizarlo (PUT)
-        response = await fetch(`http://localhost:4000/reporte/${selectedActividad.id_reporte}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payloadData),
-        });
-      } else {
-        // Si no existe un reporte, crear uno nuevo (POST)
-        response = await fetch('http://localhost:4000/reporte', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payloadData),
-        });
-      }
+
+      // Determinar si es crear o actualizar
+      const isUpdate = Boolean(selectedActividad.id_reporte);
+      const url = isUpdate
+        ? `http://localhost:4000/reporte/${selectedActividad.id_reporte}`
+        : 'http://localhost:4000/reporte';
+      const method = isUpdate ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payloadData),
+      });
+      console.log('response', response)
+
       if (!response.ok) {
-        throw new Error(`Failed to ${selectedActividad?.id_reporte ? 'update' : 'create'} report`);
+        throw new Error(`Failed to ${isUpdate ? 'update' : 'create'} report`);
       }
 
       // Obtener la respuesta para conseguir el ID del reporte
       const responseData = await response.json();
-      const reporteId = selectedActividad?.id_reporte || responseData.id;
+      const reporteId = selectedActividad.id_reporte || responseData.id;
 
-      // Llamar al endpoint handleUpdateActividadEstructura después de crear/actualizar el reporte
+      // Actualizar la actividad en el estado local para mostrar el reporte inmediatamente
+      // sin esperar una nueva consulta al servidor
+      const actividad = { ...selectedActividad };
+      actividad.id_reporte = reporteId;
+      actividad.reporte = {
+        descripcion: data.descripcion_reporte,
+        interventor: { nombre: interventores.find(i => i.id.toString() === data.interventor)?.nombre || '' },
+        residente: { nombre: residentes.find(r => r.id.toString() === data.residente)?.nombre || '' },
+        contratista: { nombre: contratistas.find(c => c.id.toString() === data.contratista)?.nombre || '' },
+        resultado: {
+          id: parseInt(data.resultado),
+          nombre: resultados.find(r => r.id.toString() === data.resultado)?.nombre || ''
+        }
+      };
+
+      // Actualizar la actividad en todas las listas relevantes
+      setActividadesData(prevActividades =>
+        prevActividades.map(act => act.id === actividad.id ? actividad : act)
+      );
+
+      setActividadesRelacionadas(prevActividades =>
+        prevActividades.map(act => act.id === actividad.id ? actividad : act)
+      );
+
+      setSelectedActividad(actividad);
+
+      // Llamar al endpoint para actualizar la actividad estructura
+      console.log('antes del endpoint')
       const updateResponse = await fetch(`http://localhost:4000/estructura/handleUpdateActividadEstructura/${reporteId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
       });
+      console.log('despues del endpoint',updateResponse)
 
       if (!updateResponse.ok) {
         console.warn('No se pudo actualizar la actividad estructura, pero el reporte fue guardado');
-      } else {
-        const updateResult = await updateResponse.json();
-        console.log('Resultado de actualización de actividad estructura:', updateResult);
       }
 
-      // Actualizar los datos de actividades para reflejar el cambio
-      await fetchActividades();
 
-      // Verificar si debemos actualizar el estado de la actividad
-      if (selectedActividad) {
-        await updateEstadoActividad(selectedActividad.id, parseInt(data.resultado));
-        // Si se actualizó la actividad, verificar si debemos actualizar la estructura
-        if (selectedActividad.id_estructura) {
-          await updateEstadoEstructura(selectedActividad.id_estructura);
-        }
+      // Actualizar el porcentaje de la estructura si es necesario
+      if (actividad.id_estructura) {
+        await updateEstadoEstructura(actividad.id_estructura);
       }
+      await fetchProyectos()
+
+      await fetchConjuntos()
+
+      await fetchEstructuras()
+
+      await fetchActividades()
 
       // Mostrar mensaje de éxito
-      setSuccess(`Reporte ${selectedActividad?.id_reporte ? 'actualizado' : 'creado'} correctamente`);
+      setSuccess(`Reporte ${isUpdate ? 'actualizado' : 'creado'} correctamente`);
+
       // Cerrar el formulario
       setReporteFormOpen(false);
+
+      // No es necesario hacer un fetchActividades completo aquí, ya que ya actualizamos
+      // los estados locales con los nuevos datos
     } catch (error) {
       console.error('Error submitting report:', error);
-      setError(`Error al ${selectedActividad?.id_reporte ? 'actualizar' : 'crear'} el reporte. Inténtelo de nuevo más tarde.`);
+      setError(`Error al ${selectedActividad?.id_reporte ? 'actualizar' : 'crear'} el reporte: ${error instanceof Error ? error.message : 'Inténtelo de nuevo más tarde'}`);
       throw error; // Re-lanzar el error para que Form.tsx pueda manejarlo
     } finally {
       setLoading(false);
     }
-  }; const handleCloseConjuntosDialog = () => {
+  };
+  const handleCloseConjuntosDialog = () => {
     setConjuntosDialogOpen(false);
   };
   const handleCloseEstructurasDialog = () => {
@@ -510,7 +680,7 @@ const ProyectoCard: React.FC = () => {
       </div>
     );
   }
-  return (  
+  return (
     <div style={{ padding: '1rem' }}>
       <h2>Proyectos</h2>
       {error && (
