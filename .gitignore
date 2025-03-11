@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 src/components/unionDeScripts.py
 package-lock.json
+src/components/script_combinado.ts
+src/utils/useDataFetch.tsx

@@ -190,7 +190,7 @@ const ProyectoCard: React.FC = () => {
       }
       const data = await response.json();
       setEstructurasData(Array.isArray(data) ? data : []);
-      
+
     } catch (error) {
       console.error('Error fetching estructura data:', error);
       // No mostramos el error para estructuras aquí, ya que no es crítico para la carga inicial
@@ -199,14 +199,18 @@ const ProyectoCard: React.FC = () => {
   const fetchActividades = async () => {
     try {
       const response = await fetch('http://localhost:4000/actividades-estructura');
-      console.log(response, 'response' );
 
       if (!response.ok) {
         throw new Error('Failed to fetch actividades data');
       }
       const data = await response.json();
-      console.log(data, 'data');
       setActividadesData(Array.isArray(data) ? data : []);
+      if (selectedEstructura?.id) {
+        const actividadesRelacionadas = data.filter(
+          (actividad: { id_estructura: number; }) => selectedEstructura?.id === actividad.id_estructura
+        );
+        setActividadesRelacionadas(actividadesRelacionadas);
+      }
     } catch (error) {
       console.error('Error fetching actividades data:', error);
       // No mostramos el error para actividades aquí, ya que no es crítico para la carga inicial
@@ -299,7 +303,6 @@ const ProyectoCard: React.FC = () => {
       const estructurasRelacionadas = estructurasData.filter(
         estructura => estructura.id_conjunto === conjunto.id
       );
-      console.log(estructurasRelacionadas, estructurasData);
       setSelectedConjunto(conjunto);
       setEstructurasRelacionadas(estructurasRelacionadas);
 
@@ -345,13 +348,11 @@ const ProyectoCard: React.FC = () => {
       }
 
       const actividadesActualizadas = await response.json();
-      console.log(actividadesActualizadas);
 
       // Si no hay un endpoint específico, filtrar de los datos locales actualizados
       const actividadesRelacionadas = Array.isArray(actividadesActualizadas)
         ? actividadesActualizadas
         : actividadesData.filter(actividad => actividad.id_estructura === estructura.id);
-
       setSelectedEstructura(estructura);
       setActividadesRelacionadas(actividadesRelacionadas);
       setActividadesDialogOpen(true);
@@ -391,12 +392,11 @@ const ProyectoCard: React.FC = () => {
         }
 
         const reporte = await response.json();
-        console.log(reporte);
 
         // Buscar los IDs correspondientes en las listas de opciones
         if (reporte) {
-          if (reporte.descripcion_reporte) {
-            descripcionReporte = reporte.descripcion_reporte.toString();
+          if (reporte.descripcion) {
+            descripcionReporte = reporte.descripcion.toString();
           }
 
           // Buscar interventor por ID
@@ -440,7 +440,6 @@ const ProyectoCard: React.FC = () => {
   };  // Función modificada para manejar el envío del formulario
   // Modificar la función handleSubmitForm para llamar al endpoint después de enviar el formulario
   const handleSubmitForm = async (data: FormData) => {
-    console.log("handlesubitForm")
     try {
       setLoading(true);
       setError(null);
@@ -456,7 +455,7 @@ const ProyectoCard: React.FC = () => {
 
       // Convertimos los IDs de string a número para la API
       const payloadData = {
-        descripcion_reporte: data.descripcion_reporte,
+        descripcion: data.descripcion_reporte,
         id_interventor: parseInt(data.interventor),
         id_residente: parseInt(data.residente),
         id_contratista: parseInt(data.contratista),
@@ -478,7 +477,6 @@ const ProyectoCard: React.FC = () => {
         },
         body: JSON.stringify(payloadData),
       });
-      console.log('response', response)
 
       if (!response.ok) {
         throw new Error(`Failed to ${isUpdate ? 'update' : 'create'} report`);
@@ -515,14 +513,12 @@ const ProyectoCard: React.FC = () => {
       setSelectedActividad(actividad);
 
       // Llamar al endpoint para actualizar la actividad estructura
-      console.log('antes del endpoint')
       const updateResponse = await fetch(`http://localhost:4000/estructura/handleUpdateActividadEstructura/${reporteId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      console.log('despues del endpoint',updateResponse)
 
       if (!updateResponse.ok) {
         console.warn('No se pudo actualizar la actividad estructura, pero el reporte fue guardado');
