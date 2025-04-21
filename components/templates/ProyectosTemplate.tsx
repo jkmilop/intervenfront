@@ -174,9 +174,9 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
 
   // Cargar datos iniciales
   const loadProyectos = async () => {
-    
+
     try {
-      
+
       setLoading(true)
       setError(null)
       const data = await fetchProyectos()
@@ -285,16 +285,16 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
     try {
       setLoading(true)
       setSelectedProyecto(proyecto)
-  
+
       // 1. Obtener todos los conjuntos asociados al proyecto
       const conjuntos = await proyectosService.fetchConjuntosByProyecto()
       const conjuntosRelacionados = conjuntos.filter(
         (conjunto: { id_proyecto: number }) => conjunto.id_proyecto === proyecto.id
       )
-  
+
       setConjuntosData(conjuntosRelacionados)
       setConjuntosDialogOpen(true)
-  
+
       // 2. Obtener el porcentaje de avance de cada conjunto
       const porcentajesC = await Promise.all(
         conjuntosRelacionados.map(async (conjunto: ConjuntoData) => {
@@ -308,9 +308,9 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
         })
       )
       setPorcentajesCompletadosC(porcentajesC)
-        
+
       setPorcentajesCompletadosC(porcentajesC)
-  
+
     } catch (err) {
       console.error("❌ Error al cargar conjuntos:", err)
       setError("Error al cargar los conjuntos del proyecto: por favor actualice la página o contacte al soporte.")
@@ -318,7 +318,7 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
       setLoading(false)
     }
   }
-  
+
   const handleCloseConjuntosDialog = () => {
     setConjuntosDialogOpen(false)
     setSelectedProyecto(null)
@@ -460,6 +460,34 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
         setPorcentajesCompletados(porcentajes)
       }
       setReporteFormOpen(false)
+      // Actualizar el porcentaje del conjunto después de guardar el reporte
+      if (selectedConjunto) {
+        try {
+          const porcentajeC = await proyectosService.getEstructuraPorcentajeC(selectedConjunto.id)
+          const index = conjuntosData.findIndex((c) => c.id === selectedConjunto.id)
+          if (index !== -1) {
+            const updatedPorcentajesC = [...porcentajesCompletadosC]
+            updatedPorcentajesC[index] = porcentajeC
+            setPorcentajesCompletadosC(updatedPorcentajesC)
+          }
+        } catch (err) {
+          console.error(`❌ Error al actualizar el porcentaje del conjunto ID ${selectedConjunto.id}:`, err)
+        }
+      }
+      // Actualizar porcentaje del proyecto después de actualizar estructura
+      if (selectedProyecto) {
+        try {
+          const porcentajeP = await proyectosService.getEstructuraPorcentajeP(selectedProyecto.id)
+          const updatedProyectos = proyectos.map((p) =>
+            p.id === selectedProyecto.id ? { ...p, progreso: porcentajeP } : p
+          )
+          setProyectos(updatedProyectos)
+        } catch (err) {
+          console.error(`❌ Error al actualizar el porcentaje del proyecto ID ${selectedProyecto.id}:`, err)
+        }
+      }
+
+
     } catch (err) {
       console.error("Error al guardar reporte:", err)
       throw err
@@ -675,7 +703,7 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
       >
         {conjuntosData.length > 0 ? (
           <List>
-            {conjuntosData.map((conjunto,index) => (
+            {conjuntosData.map((conjunto, index) => (
               <ListItem
                 key={conjunto.id}
                 onClick={() => handleShowEstructuras(conjunto)}
@@ -691,7 +719,7 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
                 <ListItemText
                   primary={conjunto.nombre}
                   secondary={`Encargado: ${conjunto.residente_encargado?.nombre || "No asignado"} | Tipo: ${conjunto.tipo_vivienda?.nombre || "No definido"} | Progreso: ${porcentajesCompletadosC[index] ?? 0}%`}
-                  />
+                />
               </ListItem>
             ))}
           </List>
