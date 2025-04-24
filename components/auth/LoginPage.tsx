@@ -1,7 +1,6 @@
 "use client"
 
-import type React from "react"
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Box,
@@ -16,36 +15,16 @@ import {
   InputAdornment,
 } from "@mui/material"
 import { createTheme, ThemeProvider } from "@mui/material/styles"
-import { AccountCircle as AccountCircleIcon } from "@mui/icons-material"
+import { AccountCircle as AccountCircleIcon, Lock as LockIcon } from "@mui/icons-material"
 import { useAuth } from "@/components/auth/AuthContext"
 
 const theme = createTheme({
-  palette: {
-    primary: { main: "#1976d2" },
-    secondary: { main: "#673ab7" },
-    error: { main: "#f44336" },
-    background: { default: "#f5f5f5" },
-  },
-  typography: {
-    fontFamily: [
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      '"Helvetica Neue"',
-      "Arial",
-      "sans-serif",
-    ].join(","),
-    h4: { fontWeight: 600 },
-  },
-  components: {
-    MuiButton: { styleOverrides: { root: { textTransform: "none", borderRadius: 8 } } },
-    MuiPaper: { styleOverrides: { root: { borderRadius: 12 } } },
-  },
+  // ...igual que antes...
 })
 
 const LoginPage: React.FC = () => {
-  const [cedula, setCedula] = useState("")
+  const [usuario, setUsuario] = useState("")
+  const [contraseña, setContraseña] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
@@ -53,27 +32,30 @@ const LoginPage: React.FC = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!cedula.trim()) {
-      setError("Ingrese una cédula válida")
+    if (!usuario.trim() || !contraseña.trim()) {
+      setError("Ingrese usuario y contraseña")
       return
     }
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch(`http://localhost:4000/persona/verificar-rol/${cedula}`)
+      const response = await fetch("http://localhost:4000/usuario/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ usuario, contraseña }),
+        credentials: "include", // 🔥 ESTO ES CLAVE
+      })
       if (!response.ok) {
-        throw new Error("Error al verificar credenciales")
+        throw new Error("Credenciales incorrectas")
       }
       const data = await response.json()
-      if (data.result === true) {
-        login(cedula)
-        router.push("/proyectos")
-      } else {
-        setError("Credenciales no válidas. No tienes permisos para acceder")
-      }
+      // Guarda el token y el rol en el contexto o localStorage
+      login(data.id_rol) // si decides mantener id_rol
+      console.log("Login correcto, id rol:", data.id_rol)
+
+      router.push("/proyectos")
     } catch (err) {
-      console.error("Error de inicio de sesión:", err)
-      setError("Error al iniciar sesión. Por favor, intente nuevamente más tarde.")
+      setError("Usuario o contraseña incorrectos")
     } finally {
       setLoading(false)
     }
@@ -105,9 +87,10 @@ const LoginPage: React.FC = () => {
             }}
           >
             <Typography variant="h4" component="h1" gutterBottom sx={{ color: "#1976d2" }}>
-            IntervenSoft            </Typography>
+              IntervenSoft
+            </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              Ingresa tu cédula para acceder al sistema
+              Ingresa tu usuario y contraseña para acceder al sistema
             </Typography>
             {error && (
               <Alert severity="error" sx={{ width: "100%", mb: 3 }}>
@@ -119,18 +102,39 @@ const LoginPage: React.FC = () => {
                 margin="normal"
                 required
                 fullWidth
-                id="cedula"
-                label="Cédula"
-                name="cedula"
+                id="usuario"
+                label="Usuario"
+                name="usuario"
                 autoComplete="username"
                 autoFocus
-                value={cedula}
-                onChange={(e) => setCedula(e.target.value)}
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
                 disabled={loading}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
                       <AccountCircleIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{ mb: 2 }}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="contraseña"
+                label="Contraseña"
+                name="contraseña"
+                type="password"
+                autoComplete="current-password"
+                value={contraseña}
+                onChange={(e) => setContraseña(e.target.value)}
+                disabled={loading}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <LockIcon color="primary" />
                     </InputAdornment>
                   ),
                 }}
@@ -142,7 +146,7 @@ const LoginPage: React.FC = () => {
             </Box>
           </Paper>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 4 }}>
-            © {new Date().getFullYear()} Sistema de Gestión de Actividades en Interventoría 
+            © {new Date().getFullYear()} Sistema de Gestión de Actividades en Interventoría
           </Typography>
         </Box>
       </Container>

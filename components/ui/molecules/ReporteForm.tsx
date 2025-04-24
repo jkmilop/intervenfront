@@ -22,6 +22,7 @@ interface ReporteFormProps {
    * Función para enviar el formulario
    */
   onSubmit: (data: ReporteFormData) => Promise<void>
+
   /**
    * Lista de interventores disponibles
    */
@@ -177,11 +178,11 @@ const ReporteForm: React.FC<ReporteFormProps> = ({
               label="resultado"
               onChange={(e) => handleChange("resultado", e.target.value as string)}
             >
-              {(resultados.records || []).map((resultado: ResultadoOption) => (
+              {Array.isArray(resultados) ? resultados.map(resultado => (
                 <MenuItem key={resultado.id} value={resultado.id.toString()}>
                   {resultado.nombre}
                 </MenuItem>
-              ))}
+              )) : null}
             </Select>
           </FormControl>
         </Grid>

@@ -1,4 +1,8 @@
 // Interfaces
+export interface CiudadData {
+    id: number
+    nombre: string
+}
 export interface ProyectoData {
   id: number
   nombre: string
@@ -127,7 +131,7 @@ export interface FormData {
   id?: number
   nombre: string
   direccion: string
-  id_ciudad: number
+  ciudad: string
 }
 
 export interface ReporteFormData {

@@ -14,6 +14,7 @@ import ReporteForm from "../ui/molecules/ReporteForm"
 import type { Column } from "../ui/organisms/DataTable"
 import type { TableActionProps } from "../ui/atoms/TableAction"
 import type {
+  CiudadData,
   ProyectoData,
   FormData,
   ConjuntoData,
@@ -55,6 +56,10 @@ function CircularProgressWithLabel(
 
 interface ProyectosTemplateProps {
   /**
+  * Función para obtener las ciduades
+  */
+  fetchCiudades: () => Promise<CiudadData[]>
+  /**
    * Función para obtener los proyectos
    */
   fetchProyectos: () => Promise<ProyectoData[]>
@@ -76,6 +81,7 @@ interface ProyectosTemplateProps {
  * Template para la gestión de proyectos con integración de ProyectoCard
  */
 const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
+  fetchCiudades,
   fetchProyectos,
   addProyecto,
   updateProyecto,
@@ -87,11 +93,11 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
-  const [formData, setFormData] = useState<FormData>({ nombre: "", direccion: "", id_ciudad: 0 })
+  const [formData, setFormData] = useState<FormData>({ nombre: "", direccion: "", ciudad: "", })
   const [editingId, setEditingId] = useState<number | null>(null)
 
   // Estado para ciudades (movido dentro del componente)
-  const [cities, setCities] = useState<{ id: number; nombre: string }[]>([])
+  const [ciudades, setCiudades] = useState<CiudadData[]>([])
 
   // Estados para conjuntos
   const [conjuntosDialogOpen, setConjuntosDialogOpen] = useState(false)
@@ -192,10 +198,9 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
   // Función para cargar las ciudades desde la URL indicada
   const loadCiudades = async () => {
     try {
-      const response = await fetch("http://localhost:4000/ciudad/1")
-      const cityData = await response.json()
-      // Si no es un arreglo, se envuelve en uno
-      setCities(Array.isArray(cityData) ? cityData : [cityData])
+      const data = await fetchCiudades()
+      console.log("Ciudades:", data)
+      setCiudades(data)
     } catch (err) {
       console.error("Error al cargar ciudades:", err)
     }
@@ -212,8 +217,8 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
       // Filtrar las personas según su id_rol:
       setContratistas(personasData.filter((persona: PersonaOption) => persona.id_rol === 1));
       setInterventores(personasData.filter((persona: PersonaOption) => persona.id_rol === 2));
-      setResidentes(personasData.filter((persona: PersonaOption) => persona.id_rol === 3));
-      setResultados(resultadosData);
+      const data = await proyectosService.fetchResultados();
+      setResultados(Array.isArray(data) ? data : Array.isArray((data as any).records) ? (data as any).records : []);
     } catch (err) {
       console.error("Error al cargar datos para formularios:", err)
     }
@@ -224,6 +229,13 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
     loadFormSelectData()
     loadCiudades()
   }, [])
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [success])
+
 
   // Manejadores para proyectos
   const handleOpenDialog = (proyecto?: ProyectoData) => {
@@ -232,11 +244,11 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
         id: proyecto.id,
         nombre: proyecto.nombre,
         direccion: proyecto.direccion,
-        id_ciudad: proyecto.id_ciudad,
+        ciudad: proyecto.ciudad?.nombre || "",
       })
       setEditingId(proyecto.id)
     } else {
-      setFormData({ nombre: "", direccion: "", id_ciudad: 0 })
+      setFormData({ nombre: "", direccion: "", ciudad: "" })
       setEditingId(null)
     }
     setDialogOpen(true)
@@ -244,7 +256,7 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
 
   const handleCloseDialog = () => {
     setDialogOpen(false)
-    setFormData({ nombre: "", direccion: "", id_ciudad: 0 })
+    setFormData({ nombre: "", direccion: "", ciudad: "" })
     setEditingId(null)
   }
 
@@ -536,18 +548,18 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
         <InputLabel id="ciudad-label">Ciudad</InputLabel>
         <Select
           labelId="ciudad-label"
-          id="ciudad-select"
-          value={formData.id_ciudad}
-          label="Ciudad"
-          onChange={(e) => handleInputChange("id_ciudad", Number(e.target.value))}
+          value={formData.ciudad}
+          label="ciudad"
+          onChange={(e) => handleChange("ciudad", e.target.value as string)}
         >
-          {cities.map((city) => (
-            <MenuItem key={city.id} value={city.id}>
-              {city.nombre}
+          {Array.isArray(ciudades) ? ciudades.map(ciudad => (
+            <MenuItem key={ciudad.id} value={ciudad.id.toString()}>
+              {ciudad.nombre}
             </MenuItem>
-          ))}
+          )) : null}
         </Select>
-      </FormControl>    </Box>
+      </FormControl>
+    </Box>
   )
 
   const formatDate = (dateString: string) => {
@@ -664,8 +676,8 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
         idField="id"
         selectable
         getRowActions={getRowActions}
-        actionButtonText="Nuevo Proyecto"
-        actionButtonIcon={<AddIcon />}
+        //actionButtonText="Nuevo Proyecto"
+        //actionButtonIcon={<AddIcon />}
         onActionButtonClick={() => handleOpenDialog()}
         searchable
         searchPlaceholder="Buscar proyectos..."
@@ -857,3 +869,7 @@ const ProyectosTemplate: React.FC<ProyectosTemplateProps> = ({
 }
 
 export default ProyectosTemplate
+function handleChange(arg0: string, arg1: string): void {
+  throw new Error("Function not implemented.")
+}
+

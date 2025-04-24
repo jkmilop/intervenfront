@@ -66,6 +66,7 @@ export default function ProyectosPage() {
       <CssBaseline />
       <NavBar title="Proyectos" onLogout={logout}>
         <ProyectosTemplate
+          fetchCiudades={proyectosService.fetchCiudades}
           fetchProyectos={proyectosService.fetchProyectos}
           addProyecto={proyectosService.addProyecto}
           updateProyecto={proyectosService.updateProyecto}

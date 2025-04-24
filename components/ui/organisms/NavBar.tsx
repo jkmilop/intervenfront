@@ -17,7 +17,6 @@ import {
 } from "@mui/material"
 import {
   Menu as MenuIcon,
-  Notifications as NotificationsIcon,
   Dashboard as DashboardIcon,
   AccountTree as StructureIcon,
   Logout as LogoutIcon,
@@ -85,9 +84,6 @@ const NavBar: React.FC<NavBarProps> = ({ title, children, onLogout }) => {
             {title}
           </Typography>
           <IconButton color="inherit">
-            <Badge badgeContent={4} color="error">
-              <NotificationsIcon />
-            </Badge>
           </IconButton>
         </Toolbar>
       </AppBar>
@@ -122,7 +118,7 @@ const NavBar: React.FC<NavBarProps> = ({ title, children, onLogout }) => {
                 </ListItemIcon>
               </ListItemButton>
             </Tooltip>
-            <Tooltip title="Estructuras" placement="right">
+           {/* <Tooltip title="Estructuras" placement="right">
               <ListItemButton
                 sx={{ display: "flex", justifyContent: "center", py: 2 }}
                 onClick={() => handleNavigation("/estructuras")}
@@ -131,7 +127,7 @@ const NavBar: React.FC<NavBarProps> = ({ title, children, onLogout }) => {
                   <StructureIcon />
                 </ListItemIcon>
               </ListItemButton>
-            </Tooltip>
+            </Tooltip>*/}
           </List>
         </Box>
         {/* Botón de Cerrar sesión en la parte inferior */}

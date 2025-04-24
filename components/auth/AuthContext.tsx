@@ -6,8 +6,10 @@ import { useRouter, usePathname } from "next/navigation"
 
 interface AuthContextType {
   isAuthenticated: boolean
-  userCedula: string | null
-  login: (cedula: string) => void
+  usuario: string | null
+  id_rol: string | null
+  token: string | null
+  login: (id_rol: string) => void
   logout: () => void
 }
 
@@ -27,20 +29,14 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [userCedula, setUserCedula] = useState<string | null>(null)
+  const [usuario, setUsuario] = useState<string | null>(null)
+  const [id_rol, setRol] = useState<string | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
-    // Verificar la autenticación usando localStorage y la cookie
-    const storedIsAuthenticated = localStorage.getItem("isAuthenticated")
-    const storedUserCedula = localStorage.getItem("userCedula")
-    const cookieAuth = document.cookie.includes("isAuthenticated=true")
-    if ((storedIsAuthenticated === "true" && storedUserCedula) || cookieAuth) {
-      setIsAuthenticated(true)
-      setUserCedula(storedUserCedula)
-    }
     setLoading(false)
   }, [])
 
@@ -51,31 +47,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (!isAuthenticated && !isPublicPath) {
         router.push("/login")
       } else if (isAuthenticated && isPublicPath) {
+        console.log("Autenticado, redireccionando a /proyectos")
         router.push("/proyectos")
       }
     }
   }, [isAuthenticated, loading, pathname, router])
 
-  const login = (cedula: string) => {
-    localStorage.setItem("isAuthenticated", "true")
-    localStorage.setItem("userCedula", cedula)
-    document.cookie = "isAuthenticated=true; path=/; max-age=3600"
+  const login = (id_rol: string) => {
     setIsAuthenticated(true)
-    setUserCedula(cedula)
+    setRol(id_rol)
+    router.push("/proyectos")
   }
-
+        
   const logout = () => {
-    localStorage.removeItem("isAuthenticated")
-    localStorage.removeItem("userCedula")
-    document.cookie = "isAuthenticated=; path=/; max-age=0"
     setIsAuthenticated(false)
-    setUserCedula(null)
+    setToken(null)
+    setUsuario(null)
+    setRol(null)
+    localStorage.removeItem("token")
+    localStorage.removeItem("usuario")
+    localStorage.removeItem("id_rol")
     router.push("/login")
   }
 
   const value: AuthContextType = {
     isAuthenticated,
-    userCedula,
+    usuario,
+    id_rol,
+    token,
     login,
     logout,
   }
